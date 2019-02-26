@@ -4,6 +4,8 @@
 #include "math_Integer.h"
 #include <cmath>
 #include <cfloat>
+#include <map>
+#include <vector>
 
 namespace math
 {
@@ -316,6 +318,34 @@ namespace math
                 }
             }
             return oss.str();
+        }
+
+        std::string to_precise_string() const
+        {
+            std::string s;
+            if (a.signum() < 0) s.append("-");
+            Unsigned q, r = a.abs();
+            r.divide(b.abs(), q, r);
+            s.append(q.to_string());
+            if (r != 0)
+            {
+                s.append(".");
+                std::map<Integer, std::map<Integer, unsigned long>> h;
+                while (r != 0)
+                {
+                    r *= 10;
+                    r.divide(b.abs(), q, r);
+                    std::map<Integer, unsigned long>* rp = nullptr;
+                    if (h.find(r) != h.end()) rp = &h.at(r);
+                    if (rp != nullptr && rp->find(q) != rp->end())
+                        return s.substr(0, rp->at(q)) + "(" +
+                               s.substr(rp->at(q)) + ")";
+                    if (rp == nullptr) { h[r] = {}; rp = &h.at(r); }
+                    if (rp->find(q) == rp->end()) (*rp)[q] = s.length();
+                    s.append(q.to_string());
+                }
+            }
+            return s;
         }
 
         std::string to_string() const
